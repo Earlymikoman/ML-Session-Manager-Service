@@ -186,10 +186,10 @@ public class FileServerHandlers
                 HttpResponse response = context.Response;
                 //If this fails, should throw a UserErrorException FileNotFound (404)
                 m = await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid);
-                //if (m == null)
-                //{
-                //    throw new UserErrorException();
-                //}
+                if (m == null)
+                {
+                    throw new UserErrorException();
+                }
                 response.ContentType = m.contenttype;
                 response.ContentLength = m.contentlength;
                 //I wasn't sure if printing to the page was sufficient, or if it should be an actual download;
@@ -236,10 +236,14 @@ public class FileServerHandlers
                 {
                     fileStrings += metadata.ToString() + "\n";
                 }
-                StreamWriter bodyWriter = new StreamWriter(response.Body);
-                bodyWriter.Write(fileStrings);
                 response.ContentLength = fileStrings.Length;
                 response.ContentType = "text/plain";
+
+                await using (var bodyWriter = new StreamWriter(response.Body))
+                {
+                    await bodyWriter.WriteAsync(fileStrings);
+                    await bodyWriter.FlushAsync();
+                }
             }
             catch(Exception e)
             {
