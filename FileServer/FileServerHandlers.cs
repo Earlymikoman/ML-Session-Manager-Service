@@ -202,8 +202,6 @@ public class FileServerHandlers
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
-
-                throw new NotImplementedException();
             }
             catch (UserErrorException e)
             {
