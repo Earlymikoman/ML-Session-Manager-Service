@@ -299,7 +299,7 @@ public class FileServerHandlers
 
                 HttpResponse response = context.Response;
                 response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus);
+                response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus + ": " + m.filename);
                 response.ContentType = "text/plain; charset=utf-8";
 
                 await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
