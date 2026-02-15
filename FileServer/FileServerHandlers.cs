@@ -301,6 +301,12 @@ public class FileServerHandlers
                 response.StatusCode = 200;
                 response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus);
                 response.ContentType = "text/plain; charset=utf-8";
+
+                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                {
+                    await bodyWriter.WriteAsync(deletionStatus + ": " + m.filename);
+                    await bodyWriter.FlushAsync();
+                }
             }
             catch(Exception e)
             {
