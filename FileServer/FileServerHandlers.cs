@@ -238,7 +238,7 @@ public class FileServerHandlers
                     throw new UserErrorException();
                 }
                 
-                string fileStrings = metadatas.Count() + "Files Found:\n";
+                string fileStrings = metadatas.Count() + " Files Found:\n";
                 foreach (FileMetadata metadata in metadatas)
                 {
                     fileStrings += "\t" + metadata.ToString() + "\n";
