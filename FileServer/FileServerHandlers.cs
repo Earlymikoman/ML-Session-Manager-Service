@@ -2,6 +2,7 @@
 using AzureFileServer.Azure;
 using AzureFileServer.Utils;
 using Microsoft.Extensions.Primitives;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace AzureFileServer.FileServer;
@@ -282,8 +283,11 @@ public class FileServerHandlers
                 // TODO: Implement the delete file delegate to remove the file
                 // from the storage system and the metadata from the CosmosDB database.
                 //Failure to find the file to be deleted will be logged, but not considered a failure state.
+                //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal.
                 string deletionStatus = "Terminal Failure";
-                if (await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid) != null)
+                //We swap to using the found metadata from here so as to make sure the names are properly synced (capitalization)
+                m = await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid);
+                if (m != null)
                 {
                     await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
                     deletionStatus = "File Found And Deleted";
