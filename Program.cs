@@ -63,6 +63,8 @@ class Program
                
         app.MapPost("/uploadfile", instance.UploadFileDelegate);
 
+        app.MapPost("/xometry", instance.XometryDelegate);
+
         app.Run();
     }
 }

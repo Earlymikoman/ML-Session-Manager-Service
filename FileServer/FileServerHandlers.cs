@@ -76,6 +76,32 @@ public class FileServerHandlers
         }
     }
 
+    public async Task XometryDelegate(HttpContext context)
+    {
+        using (var log = _logger.StartMethod(nameof(XometryDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+                string data = "";
+
+                using (var streamReader = new StreamReader(request.Body))
+                {
+                    data = await streamReader.ReadToEndAsync();
+                }
+
+                await context.Response.WriteAsync(data);
+            }
+            catch(Exception e)
+            {
+                // While you can just throw the exception back to the web server,
+                // it is not recommended. It is better to catch the exception and
+                // log it, then return a 500 Internal Server Error to the caller yourself.
+                log.HandleException(e);
+            }
+        }
+    }
+
     // Health Checks (aka ping) methods are handy to have on your service
     // They allow you to report that your are alive and return any other
     // information that is useful. These are often used by load balancers
