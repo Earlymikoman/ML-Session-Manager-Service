@@ -3,8 +3,8 @@
 version: '3.4'
 
 services:
-  mr-xometry-job-handler:
-    image: mr-xometry-job-handler
+  ml-prompt-handler:
+    image: ml-prompt-handler
     build:
       context: .
       dockerfile: ./Dockerfile
