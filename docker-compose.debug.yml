@@ -3,8 +3,8 @@
 version: '3.4'
 
 services:
-  ml-prompt-handler:
-    image: ml-prompt-handler
+  ml-session-manager:
+    image: ml-session-manager
     build:
       context: .
       dockerfile: ./Dockerfile
