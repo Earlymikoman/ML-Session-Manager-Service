@@ -9,7 +9,7 @@ namespace AzureFileServer.FileServer;
 
 // This is the core logic of the web server and hosts all of the HTTP
 // handlers used by the web server regarding File Server functionality.
-public class FileServerHandlers
+public class Sessions
 {
     private readonly IConfiguration _configuration;
     private readonly Logger _logger;
@@ -17,7 +17,7 @@ public class FileServerHandlers
     private readonly IHttpClientFactory _httpClientFactory;
 
     //I'm realizing this whole class is magic; something is filling in these parameters, according to Claude.
-    public FileServerHandlers(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public Sessions(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         if (null == _configuration)
@@ -126,7 +126,7 @@ public class FileServerHandlers
                     throw new UserErrorException("No file content found");
                 }
 
-                FileMetadata m = new FileMetadata();
+                UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = fileContent.FileName;
                 m.contenttype = fileContent.ContentType;
@@ -141,7 +141,7 @@ public class FileServerHandlers
                 // First step is we will write the metadata to CosmosDB
                 // Here we are using Type mapping to convert our data structure
                 // to a JSON document that can be stored in CosmosDB.
-                if (await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid) != null)
+                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
                 {
                     await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
                 }
@@ -181,7 +181,7 @@ public class FileServerHandlers
             {
                 HttpRequest request = context.Request;
 
-                FileMetadata m = new FileMetadata();
+                UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
 
@@ -209,7 +209,7 @@ public class FileServerHandlers
 
                 HttpResponse response = context.Response;
                 //If this fails, should throw a UserErrorException FileNotFound (404)
-                m = await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid);
+                m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
                 if (m == null)
                 {
                     throw new UserErrorException();
@@ -249,21 +249,21 @@ public class FileServerHandlers
             {
                 HttpRequest request = context.Request;
 
-                FileMetadata m = new FileMetadata();
+                UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
 
                 // TODO: Implement the list files delegate to return a list of files
                 // that are associated with the userId provided in the HTTP request.
                 HttpResponse response = context.Response;
                 string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
-                IEnumerable<FileMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<FileMetadata>(query);
+                IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
                 if (metadatas == null)
                 {
                     throw new UserErrorException();
                 }
                 
                 string fileStrings = metadatas.Count() + " Files Found:\n";
-                foreach (FileMetadata metadata in metadatas)
+                foreach (UserMetadata metadata in metadatas)
                 {
                     fileStrings += "\t" + metadata.ToString() + "\n";
                 }
@@ -301,7 +301,7 @@ public class FileServerHandlers
             {
                 HttpRequest request = context.Request;
 
-                FileMetadata m = new FileMetadata();
+                UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.filename = GetParameterFromList("filename", request, log);
 
@@ -312,7 +312,7 @@ public class FileServerHandlers
                 //Failure to find the file to be deleted will be logged, but not considered a failure state.
                 //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal, so that's what the default value gets to be.
                 string deletionStatus = "Terminal Failure";
-                if (await _cosmosDbWrapper.GetItemAsync<FileMetadata>(m.id, m.userid) != null)
+                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
                 {
                     await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
                     deletionStatus = "File Found And Deleted";

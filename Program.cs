@@ -52,7 +52,7 @@ class Program
 
         builder.Services.AddHttpClient();
 
-        FileServerHandlers instance = new FileServerHandlers(configuration);
+        Sessions instance = new Sessions(configuration);
 
         WebApplication app = builder.Build();
 
