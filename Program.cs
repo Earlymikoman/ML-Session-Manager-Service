@@ -57,13 +57,10 @@ class Program
         app.MapGet("/", instance.DefaultDelegate);
 
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
-        app.MapGet("/downloadfile", instance.DownloadFileDelegate);
-        app.MapGet("/listfiles", instance.ListFilesDelegate);
-        app.MapGet("/deletefile", instance.DeleteFileDelegate);
-               
-        app.MapPost("/uploadfile", instance.UploadFileDelegate);
-
-        app.MapPost("/xometry", instance.XometryDelegate);
+        app.MapGet("/acquireprompt", instance.AcquirePromptDelegate);
+        app.MapGet("/writepromptresponse", instance.WritePromptResponseDelegate);
+        app.MapGet("/listpromptresponses", instance.ListPromptResponsesDelegate);
+        app.MapGet("/deletepromptresponse", instance.DeletePromptResponseDelegate);
 
         app.Run();
     }
