@@ -111,6 +111,75 @@ public class Sessions
         }
     }
 
+    public async Task LoginDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(LoginDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+
+                IFormFile fileContent = context.Request.Form.Files.FirstOrDefault();
+                if (fileContent == null)
+                {
+                    throw new UserErrorException("No file content found");
+                }
+
+                UserMetadata m = new UserMetadata();
+                m.userid = GetParameterFromList("userid", request, log);
+                m.prompttype = GetParameterFromList("prompttype", request, log);
+
+                log.SetAttribute("request.userid", m.userid);
+                log.SetAttribute("request.prompttype", m.prompttype);
+
+                // First step is we will write the metadata to CosmosDB
+                // Here we are using Type mapping to convert our data structure
+                // to a JSON document that can be stored in CosmosDB.
+                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) == null)
+                {
+                    await _cosmosDbWrapper.AddItemAsync(m, m.userid);
+                }
+
+                // The POST has no response body, so we just return and the system
+                // will return a 200 OK to the caller.
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+    public async Task GetSessionDataDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(GetSessionDataDelegate), context))
+        {
+            try
+            {
+                string responseString = "";
+
+                HttpResponse response = context.Response;
+
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
+                response.ContentType = "text/plain; charset=utf-8";
+
+                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                {
+                    await bodyWriter.WriteAsync(responseString);
+                    await bodyWriter.FlushAsync();
+                }
+
+                log.SetAttribute("response.contenttype", response.ContentType);
+                log.SetAttribute("response.contentlength", response.ContentLength);
+                log.SetAttribute("response.content", response.Body);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+
     //Incomplete
     // public async Task WritePromptResponseDelegate(HttpContext context)
     // {
@@ -183,10 +252,10 @@ public class Sessions
 
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
-                string prompttype = GetParameterFromList("prompttype", request, log);
+                m.prompttype = GetParameterFromList("prompttype", request, log);
 
                 log.SetAttribute("request.userid", m.userid);
-                log.SetAttribute("request.prompttype", prompttype);
+                log.SetAttribute("request.prompttype", m.prompttype);
 
                 m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
                 if (m == null)
@@ -198,7 +267,7 @@ public class Sessions
 
                 var listClient = _httpClientFactory.CreateClient();
                 var listResponse = await listClient.GetAsync
-                (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + prompttype);
+                (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype);
 
                 if (!listResponse.IsSuccessStatusCode)
                 {

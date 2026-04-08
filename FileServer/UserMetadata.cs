@@ -6,7 +6,7 @@ public class UserMetadata
 {
     private string GenerateId()
     {
-        return $"{this.userid}"/* + "-{this.filename}"*/;
+        return $"{this.userid}-{this.prompttype}"/* + "-{this.filename}"*/;
     }
 
     // Note that "id" must be lower case for the Cosmos APIs to work
@@ -14,6 +14,7 @@ public class UserMetadata
     public string id { get { return GenerateId(); } }
 
     public string userid { get; set; } = string.Empty;
+    public string prompttype {get; set;} = string.Empty;
     public int promptdepth {get; set;} = 0;
 
     public override string ToString()
