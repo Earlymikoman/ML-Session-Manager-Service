@@ -183,47 +183,75 @@ public class Sessions
 
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
-                m.filename = GetParameterFromList("filename", request, log);
+                string prompttype = GetParameterFromList("prompttype", request, log);
 
-                m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
+                log.SetAttribute("request.userid", m.userid);
+                log.SetAttribute("request.prompttype", prompttype);
 
-                log.SetAttribute("request.filename", m.filename);
-
-
-
-                var client = _httpClientFactory.CreateClient();
-                var promptResponse = await client.GetAsync(_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "");
-
-                if (!promptResponse.IsSuccessStatusCode)
-                {
-                    throw new UserErrorException();
-                }
-
-                var content = await promptResponse.Content.ReadAsStringAsync();
-
-
-
-                // TODO: Implement the download file delegate to return the file
-                // contents to the caller via the HTTP response after receiving both
-                // the userId and the filename to find.
-
-                HttpResponse response = context.Response;
-                //If this fails, should throw a UserErrorException FileNotFound (404)
                 m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
                 if (m == null)
                 {
                     throw new UserErrorException();
                 }
-                response.ContentType = m.contenttype;
-                response.ContentLength = m.contentlength;
-                //I wasn't sure if printing to the page was sufficient, or if it should be an actual download;
-                //Went with actual download because uploadfile seems to deal in actual files, so downloadfile should too.
-                //Full disclosure, this line in particular is just AI (Grok); I asked it how to download a file
-                //via http rather than just print the response, and this was the result.
-                response.Headers.Append("Content-Disposition", $"attachment; filename=\"{Path.GetFileName(m.filename)}\"");
 
-                var blobStorage = new BlobStorageWrapper(_configuration);
-                await blobStorage.DownloadBlob(m.userid, m.filename, response.Body);
+
+
+                var listClient = _httpClientFactory.CreateClient();
+                var listResponse = await listClient.GetAsync
+                (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + prompttype);
+
+                if (!listResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException();
+                }
+
+                var listContent = await listResponse.Content.ReadAsStringAsync();
+                List<string> promptnames = new List<string>(){""};
+                foreach (var character in listContent)
+                {
+                    if (character == '\n')
+                    {
+                        promptnames.Add("");
+
+                        continue;
+                    }
+
+                    promptnames[promptnames.Count - 1] += character;
+                }
+
+
+
+                string responseString = "No New Prompts Found.";
+                if (m.promptdepth < promptnames.Count && m.promptdepth >= 0)
+                {
+                    string promptToRequest = promptnames[m.promptdepth];
+                    var promptClient = _httpClientFactory.CreateClient();
+                    var promptResponse = await promptClient.GetAsync
+                    (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?userid=" + m.userid + "&filename=" + promptToRequest);
+
+                    if (!promptResponse.IsSuccessStatusCode)
+                    {
+                        throw new UserErrorException();
+                    }
+
+                    var promptContent = await promptResponse.Content.ReadAsStringAsync();
+
+                    responseString = promptContent;
+                }
+
+
+
+                HttpResponse response = context.Response;
+
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
+                response.ContentType = "text/plain; charset=utf-8";
+
+                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
+                {
+                    await bodyWriter.WriteAsync(responseString);
+                    await bodyWriter.FlushAsync();
+                }
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
