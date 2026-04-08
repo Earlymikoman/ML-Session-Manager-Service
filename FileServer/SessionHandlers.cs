@@ -287,7 +287,7 @@ public class Sessions
                 string responseString = "No New Prompts Found.";
                 if (m.promptdepth < promptnames.Count && m.promptdepth >= 0)
                 {
-                    string promptToRequest = promptnames[m.promptdepth];
+                    string promptToRequest = promptnames[m.promptdepth + 1];
                     var promptClient = _httpClientFactory.CreateClient();
                     var promptResponse = await promptClient.GetAsync
                     (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?userid=" + m.userid + "&filename=" + promptToRequest);
