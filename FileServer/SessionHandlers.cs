@@ -215,6 +215,7 @@ public class Sessions
 
                 // Convert your string to bytes and add it as a file field (replicates file=@FILENAME.EXT)
                 var newFileContent = new StringContent(fileString);
+                newFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
                 multipartContent.Add(newFileContent, "file", "dummy.txt");
 
 
