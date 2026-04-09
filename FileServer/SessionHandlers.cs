@@ -287,7 +287,7 @@ public class Sessions
 
 
 
-                string responseString = "No New Prompts Found.";
+                string responseString = "No New Prompts Found Of " + promptnames.Count + "Prompts.\n\n" + listContent;
                 if (m.promptdepth + 1 < promptnames.Count && m.promptdepth >= 1)
                 {
                     string promptToRequest = promptnames[m.promptdepth + 1];
