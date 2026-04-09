@@ -189,6 +189,11 @@ public class Sessions
                 {
                     throw new UserErrorException("No file content found");
                 }
+                string fileString;
+                using (var reader = new StreamReader(fileContent.OpenReadStream()))
+                {
+                    fileString = await reader.ReadToEndAsync();
+                }
 
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
@@ -205,29 +210,16 @@ public class Sessions
 
 
                 //Grok showing me how to attach a file programmatically.
-                using var formContent = new MultipartFormDataContent();
+                // Create the multipart form data (replicates -F)
+                var multipartContent = new MultipartFormDataContent();
 
-                // Forward the file (this matches curl)
-                var fileStreamContent = new StreamContent(fileContent.OpenReadStream());
-                fileStreamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(
-                    string.IsNullOrWhiteSpace(fileContent.ContentType) 
-                        ? "application/octet-stream" 
-                        : fileContent.ContentType);
-
-                formContent.Add(fileStreamContent, "file", fileContent.FileName ?? "prompt.txt");
-
-                // Remove quoted boundary (common fix for 405 when curl works)
-                var boundaryParam = formContent.Headers.ContentType?.Parameters
-                    .FirstOrDefault(p => string.Equals(p.Name, "boundary", StringComparison.OrdinalIgnoreCase));
-
-                if (boundaryParam?.Value != null)
-                {
-                    boundaryParam.Value = boundaryParam.Value.Replace("\"", "");
-                }
+                // Convert your string to bytes and add it as a file field (replicates file=@FILENAME.EXT)
+                var newFileContent = new StringContent(fileString);
+                multipartContent.Add(newFileContent, "file", "FILENAME.EXT");
 
 
 
-                var response = await dataClient.PostAsync(dataUrl, formContent);
+                var response = await dataClient.PostAsync(dataUrl, newFileContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
