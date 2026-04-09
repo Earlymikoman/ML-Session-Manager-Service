@@ -215,7 +215,7 @@ public class Sessions
 
                 // Convert your string to bytes and add it as a file field (replicates file=@FILENAME.EXT)
                 var newFileContent = new StringContent(fileString);
-                multipartContent.Add(newFileContent, "file", "FILENAME.EXT");
+                multipartContent.Add(newFileContent, "file", "dummy.txt");
 
 
 
