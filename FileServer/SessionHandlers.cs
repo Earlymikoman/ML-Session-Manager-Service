@@ -5,6 +5,7 @@ using Microsoft.Extensions.Primitives;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace AzureFileServer.FileServer;
 
@@ -145,6 +146,17 @@ public class Sessions
                 response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
                 response.ContentType = "text/plain; charset=utf-8";
 
+
+
+                var CurrentSessionData = new 
+                { 
+                    User = m.userid, 
+                    PromptType = m.prompttype, 
+                    PromptName = "None" 
+                };
+                string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                //Grok knows its cookies
                 var cookieOptions = new CookieOptions
                 {
                     Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
@@ -154,7 +166,7 @@ public class Sessions
                     SameSite = SameSiteMode.Strict                // or Lax / None
                 };
 
-                response.Cookies.Append("TestLoginCookie", "TestLoginCookieValue", cookieOptions);
+                response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
             }
             catch(Exception e)
             {
@@ -170,11 +182,10 @@ public class Sessions
             {
                 HttpRequest request = context.Request;
 
-                var cookieValue = request.Cookies["TestLoginCookie"];
-
+                var cookieValue = request.Cookies["CurrentSessionData"];
                 if (string.IsNullOrEmpty(cookieValue))
                 {
-                    cookieValue = "No Cookie Found";
+                    cookieValue = "No Session Data Found";
                 }
 
 
@@ -361,6 +372,26 @@ public class Sessions
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
                 log.SetAttribute("response.content", response.Body);
+
+                var CurrentSessionData = new 
+                { 
+                    User = m.userid, 
+                    PromptType = m.prompttype, 
+                    PromptName = "None" 
+                };
+                string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                //Grok knows its cookies
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                    HttpOnly = true,                              // Prevents JavaScript access (security)
+                    Secure = true,                                // Only send over HTTPS
+                    IsEssential = true,                           // For GDPR consent (if needed)
+                    SameSite = SameSiteMode.Strict                // or Lax / None
+                };
+
+                response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
             }
             catch (UserErrorException e)
             {
