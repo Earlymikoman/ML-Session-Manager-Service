@@ -291,6 +291,7 @@ public class Sessions
             try
             {
                 HttpRequest request = context.Request;
+                HttpResponse response = context.Response;
 
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
@@ -347,17 +348,37 @@ public class Sessions
 
                     if (!promptResponse.IsSuccessStatusCode)
                     {
-                        throw new UserErrorException();
+                        throw new UserErrorException("Couldn't Find Prompt: " + promptToRequest);
                     }
 
                     var promptContent = await promptResponse.Content.ReadAsStringAsync();
 
                     responseString = promptContent;
-                }
 
 
 
-                HttpResponse response = context.Response;
+                    var CurrentSessionData = new 
+                    { 
+                        User = m.userid, 
+                        PromptType = m.prompttype, 
+                        PromptName = promptToRequest 
+                    };
+                    string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+
+                    //Grok knows its cookies
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
+                        HttpOnly = true,                              // Prevents JavaScript access (security)
+                        Secure = true,                                // Only send over HTTPS
+                        IsEssential = true,                           // For GDPR consent (if needed)
+                        SameSite = SameSiteMode.Strict                // or Lax / None
+                    };
+
+                    response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
+                    }
+
+
 
                 response.StatusCode = 200;
                 response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
@@ -372,26 +393,6 @@ public class Sessions
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
                 log.SetAttribute("response.content", response.Body);
-
-                var CurrentSessionData = new 
-                { 
-                    User = m.userid, 
-                    PromptType = m.prompttype, 
-                    PromptName = "None" 
-                };
-                string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
-
-                //Grok knows its cookies
-                var cookieOptions = new CookieOptions
-                {
-                    Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
-                    HttpOnly = true,                              // Prevents JavaScript access (security)
-                    Secure = true,                                // Only send over HTTPS
-                    IsEssential = true,                           // For GDPR consent (if needed)
-                    SameSite = SameSiteMode.Strict                // or Lax / None
-                };
-
-                response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
             }
             catch (UserErrorException e)
             {
