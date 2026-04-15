@@ -113,67 +113,45 @@ public class Sessions
         }
     }
 
-    // public async Task LoginDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(LoginDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
+    public async Task LoginDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(LoginDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
 
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
-    //             m.prompttype = GetParameterFromList("prompttype", request, log);
+                UserMetadata m = new UserMetadata();
+                m.userid = GetParameterFromList("userid", request, log);
+                m.prompttype = GetParameterFromList("prompttype", request, log);
 
-    //             log.SetAttribute("request.userid", m.userid);
-    //             log.SetAttribute("request.prompttype", m.prompttype);
+                log.SetAttribute("request.userid", m.userid);
+                log.SetAttribute("request.prompttype", m.prompttype);
 
-    //             // First step is we will write the metadata to CosmosDB
-    //             // Here we are using Type mapping to convert our data structure
-    //             // to a JSON document that can be stored in CosmosDB.
-    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) == null)
-    //             {
-    //                 await _cosmosDbWrapper.AddItemAsync(m, m.userid);
-    //             }
-
-
-
-    //             string responseString = "";
-
-    //             HttpResponse response = context.Response;
-
-    //             response.StatusCode = 200;
-    //             response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-    //             response.ContentType = "text/plain; charset=utf-8";
+                // First step is we will write the metadata to CosmosDB
+                // Here we are using Type mapping to convert our data structure
+                // to a JSON document that can be stored in CosmosDB.
+                if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) == null)
+                {
+                    await _cosmosDbWrapper.AddItemAsync(m, m.userid);
+                }
 
 
 
-    //             var CurrentSessionData = new 
-    //             { 
-    //                 User = m.userid, 
-    //                 PromptType = m.prompttype, 
-    //                 PromptName = "None" 
-    //             };
-    //             string sessionJson = JsonSerializer.Serialize(CurrentSessionData);
+                string responseString = "";
 
-    //             //Grok knows its cookies
-    //             var cookieOptions = new CookieOptions
-    //             {
-    //                 Expires = DateTimeOffset.UtcNow.AddDays(1),   // or .AddHours(1), etc.
-    //                 HttpOnly = true,                              // Prevents JavaScript access (security)
-    //                 Secure = true,                                // Only send over HTTPS
-    //                 IsEssential = true,                           // For GDPR consent (if needed)
-    //                 SameSite = SameSiteMode.Strict                // or Lax / None
-    //             };
+                HttpResponse response = context.Response;
 
-    //             response.Cookies.Append("CurrentSessionData", sessionJson, cookieOptions);
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
+                response.StatusCode = 200;
+                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
+                response.ContentType = "text/plain; charset=utf-8";
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
     public async Task GetSessionDataDelegate(HttpContext context)
     {
         using(var log = _logger.StartMethod(nameof(GetSessionDataDelegate), context))
