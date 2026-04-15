@@ -299,25 +299,15 @@ public class Sessions
                 }
 
                 var listContent = await listResponse.Content.ReadAsStringAsync();
-                List<string> promptnames = new List<string>(){""};
-                foreach (var character in listContent)
+                List<string> promptnames = JsonSerializer.Deserialize<List<string>>(listContent);
+
+
+
+                string responseString = "";
+                string promptToRequest = "";
+                if (m.promptdepth < promptnames.Count && m.promptdepth >= 0)
                 {
-                    if (character == '\n')
-                    {
-                        promptnames.Add("");
-
-                        continue;
-                    }
-
-                    promptnames[promptnames.Count - 1] += character;
-                }
-
-
-
-                string responseString = "No New Prompts Found Of " + promptnames.Count + "Prompts.\n\n" + listContent;
-                if (m.promptdepth + 1 < promptnames.Count - 1 && m.promptdepth >= 0)
-                {
-                    string promptToRequest = promptnames[m.promptdepth + 1];
+                    promptToRequest = promptnames[m.promptdepth];
                     responseString = "Couldn't Find Prompt: " + promptToRequest;
 
                     var promptClient = _httpClientFactory.CreateClient();
@@ -332,20 +322,15 @@ public class Sessions
                     var promptContent = await promptResponse.Content.ReadAsStringAsync();
 
                     responseString = promptContent;
-
-                    }
-
-
-
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
-
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(responseString);
-                    await bodyWriter.FlushAsync();
                 }
+
+                var promptJsonObject = new 
+                { 
+                    promptname = promptToRequest, 
+                    promptcontent = responseString
+                };
+
+                await response.WriteAsJsonAsync(promptJsonObject);
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 log.SetAttribute("response.contentlength", response.ContentLength);
