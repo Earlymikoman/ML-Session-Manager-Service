@@ -357,6 +357,58 @@ public class Sessions
         }
     }
 
+    public async Task SkipPromptDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(SkipPromptDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
+
+                UserMetadata m = new UserMetadata();
+                m.userid = GetParameterFromList("userid", request, log);
+                m.prompttype = GetParameterFromList("prompttype", request, log);
+
+                
+
+                //Update user timestamp.
+                m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
+                if (m == null)
+                {
+                    throw new UserErrorException("Failed To Find User");
+                }
+
+                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
+                log.SetAttribute("request.url", listUrl);
+
+                var listClient = _httpClientFactory.CreateClient();
+                var listResponse = await listClient.GetAsync(listUrl);
+
+                if (!listResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException("Forward Failed");
+                }
+
+                var listContent = await listResponse.Content.ReadAsStringAsync();
+                var promptdata = JsonSerializer.Deserialize<Dictionary<string, object>>(listContent);
+                m.lastTimestamp = promptdata["timestamp"].ToString();
+                await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
+
+                // The POST has no response body, so we just return and the system
+                // will return a 200 OK to the caller.
+                context.Response.StatusCode = 200;
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
+
     //Incomplete
     // public async Task ListPromptResponsesDelegate(HttpContext context)
     // {
