@@ -124,6 +124,7 @@ public class Sessions
                 UserMetadata m = new UserMetadata();
                 m.userid = GetParameterFromList("userid", request, log);
                 m.prompttype = GetParameterFromList("prompttype", request, log);
+                m.lastTimestamp = DateTime.MinValue.ToString("o");
 
                 log.SetAttribute("request.userid", m.userid);
                 log.SetAttribute("request.prompttype", m.prompttype);
@@ -138,13 +139,9 @@ public class Sessions
 
 
 
-                string responseString = "";
-
                 HttpResponse response = context.Response;
 
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
+                await response.WriteAsJsonAsync(m);
             }
             catch(Exception e)
             {
