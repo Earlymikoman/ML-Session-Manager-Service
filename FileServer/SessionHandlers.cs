@@ -315,11 +315,11 @@ public class Sessions
                 }
 
                 var listContent = await listResponse.Content.ReadAsStringAsync();
-                var promptdata = JsonSerializer.Deserialize<Dictionary<string, string>>(listContent);
+                var promptdata = JsonSerializer.Deserialize<Dictionary<string, object>>(listContent);
 
 
 
-                string promptToRequest = promptdata["promptname"];
+                string promptToRequest = promptdata["promptname"].ToString();
                 
                     var promptClient = _httpClientFactory.CreateClient();
                     var promptResponse = await promptClient.GetAsync
