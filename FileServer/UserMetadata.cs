@@ -15,10 +15,5 @@ public class UserMetadata
 
     public string userid { get; set; } = string.Empty;
     public string prompttype {get; set;} = string.Empty;
-    public int promptdepth {get; set;} = 0;
-
-    public override string ToString()
-    {
-        return $"id: {id}, userid: {userid}, promptdepth: {promptdepth}";
-    }
+    public string lastTimestamp {get;set;} = string.Empty;
 }

@@ -225,8 +225,6 @@ public class Sessions
 
                 var dataClient = _httpClientFactory.CreateClient();
 
-
-
                 //Grok showing me how to attach a file programmatically.
                 // Create the multipart form data (replicates -F)
                 var multipartContent = new MultipartFormDataContent();
@@ -236,8 +234,6 @@ public class Sessions
                 newFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
                 multipartContent.Add(newFileContent, "file", "dummy.txt");
 
-
-
                 var response = await dataClient.PostAsync(dataUrl, multipartContent);
 
                 if (!response.IsSuccessStatusCode)
@@ -246,6 +242,30 @@ public class Sessions
                     log.SetAttribute("downstream.error", $"{(int)response.StatusCode} {response.ReasonPhrase}");
                     throw new UserErrorException($"Forward failed: {(int)response.StatusCode}");
                 }
+
+
+                //Update user timestamp if response was sent successfully.
+                m = await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid);
+                if (m == null)
+                {
+                    throw new UserErrorException("Failed To Find User");
+                }
+
+                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
+                log.SetAttribute("request.url", listUrl);
+
+                var listClient = _httpClientFactory.CreateClient();
+                var listResponse = await listClient.GetAsync(listUrl);
+
+                if (!listResponse.IsSuccessStatusCode)
+                {
+                    throw new UserErrorException("Forward Failed");
+                }
+
+                var listContent = await listResponse.Content.ReadAsStringAsync();
+                var promptdata = JsonSerializer.Deserialize<Dictionary<string, string>>(listContent);
+                m.lastTimestamp = promptdata["timestamp"];
+                await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
 
                 // The POST has no response body, so we just return and the system
                 // will return a 200 OK to the caller.
@@ -286,7 +306,7 @@ public class Sessions
 
 
 
-                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype;
+                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
                 log.SetAttribute("request.url", listUrl);
 
                 var listClient = _httpClientFactory.CreateClient();
@@ -298,17 +318,12 @@ public class Sessions
                 }
 
                 var listContent = await listResponse.Content.ReadAsStringAsync();
-                List<string> promptnames = JsonSerializer.Deserialize<List<string>>(listContent);
+                var promptdata = JsonSerializer.Deserialize<Dictionary<string, string>>(listContent);
 
 
 
-                string responseString = "";
-                string promptToRequest = "";
-                if (m.promptdepth < promptnames.Count && m.promptdepth >= 0)
-                {
-                    promptToRequest = promptnames[m.promptdepth];
-                    responseString = "Couldn't Find Prompt: " + promptToRequest;
-
+                string promptToRequest = promptdata["promptname"];
+                
                     var promptClient = _httpClientFactory.CreateClient();
                     var promptResponse = await promptClient.GetAsync
                     (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?prompttype=" + m.prompttype + "&promptname=" + promptToRequest);
@@ -319,14 +334,12 @@ public class Sessions
                     }
 
                     var promptContent = await promptResponse.Content.ReadAsStringAsync();
-
-                    responseString = promptContent;
-                }
+                
 
                 var promptJsonObject = new 
                 { 
                     promptname = promptToRequest, 
-                    promptcontent = responseString
+                    promptcontent = promptContent
                 };
 
                 await response.WriteAsJsonAsync(promptJsonObject);
