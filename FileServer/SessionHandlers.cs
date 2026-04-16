@@ -260,8 +260,8 @@ public class Sessions
                 }
 
                 var listContent = await listResponse.Content.ReadAsStringAsync();
-                var promptdata = JsonSerializer.Deserialize<Dictionary<string, string>>(listContent);
-                m.lastTimestamp = promptdata["timestamp"];
+                var promptdata = JsonSerializer.Deserialize<Dictionary<string, object>>(listContent);
+                m.lastTimestamp = promptdata["timestamp"].ToString();
                 await _cosmosDbWrapper.UpdateItemAsync(m.id, m.userid, m);
 
                 // The POST has no response body, so we just return and the system
