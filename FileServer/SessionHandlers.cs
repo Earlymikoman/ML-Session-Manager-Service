@@ -290,12 +290,11 @@ public class Sessions
                 log.SetAttribute("request.url", listUrl);
 
                 var listClient = _httpClientFactory.CreateClient();
-                var listResponse = await listClient.GetAsync
-                (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/listprompts?prompttype=" + m.prompttype);
+                var listResponse = await listClient.GetAsync(listUrl);
 
                 if (!listResponse.IsSuccessStatusCode)
                 {
-                    throw new UserErrorException();
+                    throw new UserErrorException("Forward Failed");
                 }
 
                 var listContent = await listResponse.Content.ReadAsStringAsync();
