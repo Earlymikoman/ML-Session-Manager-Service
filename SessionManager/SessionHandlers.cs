@@ -301,13 +301,14 @@ public class Sessions
                     var promptContent = await promptResponse.Content.ReadAsStringAsync();
                 
 
-                var promptJsonObject = new 
-                { 
-                    promptname = promptToRequest, 
-                    promptcontent = promptContent
-                };
+                //From old formatting.
+                // var promptJsonObject = new 
+                // { 
+                //     promptname = promptToRequest, 
+                //     promptcontent = promptContent
+                // };
 
-                await response.WriteAsJsonAsync(promptJsonObject);
+                await response.WriteAsync(promptContent);
 
                 log.SetAttribute("response.contenttype", response.ContentType);
                 //log.SetAttribute("response.contentlength", response.ContentLength);
