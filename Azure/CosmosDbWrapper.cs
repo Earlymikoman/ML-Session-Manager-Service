@@ -3,10 +3,10 @@ using System.Net;
 using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 
-using AzureFileServer.Utils;
-using AzureFileServer.FileServer;
+using MLSessionManager.Utils;
+using MLSessionManager.SessionManager;
 
-namespace AzureFileServer.Azure;
+namespace MLSessionManager.Azure;
 
 // A very simple wrapper to make it easier to call CosmosDb APIs
 public class CosmosDbWrapper
@@ -26,8 +26,8 @@ public class CosmosDbWrapper
         string serviceName = configuration["Logging:ServiceName"];
         _logger = new Logger(serviceName);
         
-        string cosmosEndpoint = configuration["AzureFileServer:ConnectionStrings:CosmosEndpoint"];
-        string cosmosConnectionString = configuration["AzureFileServer:ConnectionStrings:CosmosConnectionString"];
+        string cosmosEndpoint = configuration["MLSessionManager:ConnectionStrings:CosmosEndpoint"];
+        string cosmosConnectionString = configuration["MLSessionManager:ConnectionStrings:CosmosConnectionString"];
         if (string.IsNullOrEmpty(cosmosConnectionString))
         {
             _client = new CosmosClient(cosmosEndpoint, new DefaultAzureCredential());
@@ -37,8 +37,8 @@ public class CosmosDbWrapper
             _client = new CosmosClient(cosmosConnectionString);
         }
 
-        string databaseName = configuration["AzureFileServer:ConnectionStrings:CosmosDatabaseName"];
-        string containerName = configuration["AzureFileServer:ConnectionStrings:CosmosContainerName"];
+        string databaseName = configuration["MLSessionManager:ConnectionStrings:CosmosDatabaseName"];
+        string containerName = configuration["MLSessionManager:ConnectionStrings:CosmosContainerName"];
         _container = _client.GetContainer(databaseName, containerName);
     }
 

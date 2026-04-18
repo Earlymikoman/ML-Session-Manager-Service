@@ -4,7 +4,7 @@
     "\\.github",
     "\\.github\\workflows",
     "\\Azure",
-    "\\FileServer",
+    "\\SessionManager",
     "\\obj",
     "\\obj\\Debug",
     "\\obj\\Debug\\net8.0",

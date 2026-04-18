@@ -1,13 +1,13 @@
 
-using AzureFileServer.Azure;
-using AzureFileServer.Utils;
+using MLSessionManager.Azure;
+using MLSessionManager.Utils;
 using Microsoft.Extensions.Primitives;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace AzureFileServer.FileServer;
+namespace MLSessionManager.SessionManager;
 
 // This is the core logic of the web server and hosts all of the HTTP
 // handlers used by the web server regarding File Server functionality.
@@ -183,7 +183,7 @@ public class Sessions
 
                 //m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());               
 
-                string dataUrl = _configuration["AzureFileServer:ConnectionStrings:DataHandlerEndpoint"]
+                string dataUrl = _configuration["MLSessionManager:ConnectionStrings:DataHandlerEndpoint"]
                 + "/uploaddata?userid=" + m.userid + "&prompttype=" + m.prompttype + "&promptname=" + promptname;
                 log.SetAttribute("request.url", dataUrl);
 
@@ -215,7 +215,7 @@ public class Sessions
                     throw new UserErrorException("Failed To Find User");
                 }
 
-                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
+                string listUrl = _configuration["MLSessionManager:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
                 log.SetAttribute("request.url", listUrl);
 
                 var listClient = _httpClientFactory.CreateClient();
@@ -271,7 +271,7 @@ public class Sessions
 
 
 
-                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
+                string listUrl = _configuration["MLSessionManager:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
                 log.SetAttribute("request.url", listUrl);
 
                 var listClient = _httpClientFactory.CreateClient();
@@ -291,7 +291,7 @@ public class Sessions
                 
                     var promptClient = _httpClientFactory.CreateClient();
                     var promptResponse = await promptClient.GetAsync
-                    (_configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?prompttype=" + m.prompttype + "&promptname=" + promptToRequest);
+                    (_configuration["MLSessionManager:ConnectionStrings:PromptHandlerEndpoint"] + "/getprompt?prompttype=" + m.prompttype + "&promptname=" + promptToRequest);
 
                     if (!promptResponse.IsSuccessStatusCode)
                     {
@@ -345,7 +345,7 @@ public class Sessions
                     throw new UserErrorException("Failed To Find User");
                 }
 
-                string listUrl = _configuration["AzureFileServer:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
+                string listUrl = _configuration["MLSessionManager:ConnectionStrings:PromptHandlerEndpoint"] + "/findpromptmetadata?prompttype=" + m.prompttype + "&timestamp=" + m.lastTimestamp;
                 log.SetAttribute("request.url", listUrl);
 
                 var listClient = _httpClientFactory.CreateClient();
