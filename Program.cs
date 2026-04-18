@@ -61,12 +61,10 @@ class Program
 
         app.MapGet("/healthcheck", instance.HealthCheckDelegate);
         app.MapGet("/login", instance.LoginDelegate);
-        app.MapGet("/getsessiondata", instance.GetSessionDataDelegate);
         app.MapGet("/acquireprompt", instance.AcquirePromptDelegate);
-        app.MapGet("/skipprompt", instance.SkipPromptDelegate);
+        app.MapPost("/skipprompt", instance.SkipPromptDelegate);
         app.MapPost("/writepromptresponse", instance.WritePromptResponseDelegate);
-        //app.MapGet("/listpromptresponses", instance.ListPromptResponsesDelegate);
-        //app.MapGet("/deletepromptresponse", instance.DeletePromptResponseDelegate);
+        app.MapPost("/resetuser", instance.ResetUserDelegate);
 
         app.Run();
     }

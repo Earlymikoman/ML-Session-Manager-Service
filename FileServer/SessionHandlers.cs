@@ -156,48 +156,7 @@ public class Sessions
             }
         }
     }
-    public async Task GetSessionDataDelegate(HttpContext context)
-    {
-        using(var log = _logger.StartMethod(nameof(GetSessionDataDelegate), context))
-        {
-            try
-            {
-                HttpRequest request = context.Request;
 
-                var cookieValue = request.Cookies["CurrentSessionData"];
-                if (string.IsNullOrEmpty(cookieValue))
-                {
-                    cookieValue = "No Session Data Found";
-                }
-
-
-
-                string responseString = cookieValue;
-
-                HttpResponse response = context.Response;
-
-                response.StatusCode = 200;
-                response.ContentLength = Encoding.UTF8.GetByteCount(responseString);
-                response.ContentType = "text/plain; charset=utf-8";
-
-                await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-                {
-                    await bodyWriter.WriteAsync(responseString);
-                    await bodyWriter.FlushAsync();
-                }
-
-                log.SetAttribute("response.contenttype", response.ContentType);
-                log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
-            }
-            catch(Exception e)
-            {
-                log.HandleException(e);
-            }
-        }
-    }
-
-    //Complete
     public async Task WritePromptResponseDelegate(HttpContext context)
     {
         using(var log = _logger.StartMethod(nameof(WritePromptResponseDelegate), context))
@@ -404,7 +363,6 @@ public class Sessions
 
                 // The POST has no response body, so we just return and the system
                 // will return a 200 OK to the caller.
-                context.Response.StatusCode = 200;
             }
             catch (UserErrorException e)
             {
@@ -417,108 +375,43 @@ public class Sessions
         }
     }
 
-    //Incomplete
-    // public async Task ListPromptResponsesDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(ListPromptResponsesDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
+    public async Task ResetUserDelegate(HttpContext context)
+    {
+        using(var log = _logger.StartMethod(nameof(ResetUserDelegate), context))
+        {
+            try
+            {
+                HttpRequest request = context.Request;
 
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
+                UserMetadata m = new UserMetadata();
+                m.userid = GetParameterFromList("userid", request, log);
 
-    //             // TODO: Implement the list files delegate to return a list of files
-    //             // that are associated with the userId provided in the HTTP request.
-    //             HttpResponse response = context.Response;
-    //             string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
-    //             IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
-    //             if (metadatas == null)
-    //             {
-    //                 throw new UserErrorException();
-    //             }
                 
-    //             string fileStrings = metadatas.Count() + " Files Found:\n";
-    //             foreach (UserMetadata metadata in metadatas)
-    //             {
-    //                 fileStrings += "\t" + metadata.ToString() + "\n";
-    //             }
-    //             response.StatusCode = 200;
-    //             response.ContentLength = Encoding.UTF8.GetByteCount(fileStrings);
-    //             response.ContentType = "text/plain; charset=utf-8";
 
-    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-    //             {
-    //                 await bodyWriter.WriteAsync(fileStrings);
-    //                 await bodyWriter.FlushAsync();
-    //             }
+                string query = $"SELECT * FROM c WHERE c.userid = \"{m.userid}\"";
+                IEnumerable<UserMetadata> metadatas = await _cosmosDbWrapper.GetItemsAsync<UserMetadata>(query);
+                if (metadatas == null)
+                {
+                    throw new UserErrorException();
+                }
 
-    //             log.SetAttribute("response.contenttype", response.ContentType);
-    //             log.SetAttribute("response.contentlength", response.ContentLength);
-    //             log.SetAttribute("response.content", response.Body);
-    //         }
-    //         catch (UserErrorException e)
-    //         {
-    //             log.LogUserError(e.Message);
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
-
-    //Incomplete
-    // public async Task DeletePromptResponseDelegate(HttpContext context)
-    // {
-    //     using(var log = _logger.StartMethod(nameof(DeletePromptResponseDelegate), context))
-    //     {
-    //         try
-    //         {
-    //             HttpRequest request = context.Request;
-
-    //             UserMetadata m = new UserMetadata();
-    //             m.userid = GetParameterFromList("userid", request, log);
-    //             m.filename = GetParameterFromList("filename", request, log);
-
-    //             m.filename = Path.ChangeExtension(Path.GetFileNameWithoutExtension(m.filename), Path.GetExtension(m.filename).ToLowerInvariant());
-
-    //             // TODO: Implement the delete file delegate to remove the file
-    //             // from the storage system and the metadata from the CosmosDB database.
-    //             //Failure to find the file to be deleted will be logged, but not considered a failure state.
-    //             //I don't know what would cause "Terminal Failure" to show, but I know it would indeed be terminal, so that's what the default value gets to be.
-    //             string deletionStatus = "Terminal Failure";
-    //             if (await _cosmosDbWrapper.GetItemAsync<UserMetadata>(m.id, m.userid) != null)
-    //             {
-    //                 await _cosmosDbWrapper.DeleteItemAsync(m.id, m.userid);
-    //                 deletionStatus = "File Found And Deleted";
-    //             }
-    //             else
-    //             {
-    //                 deletionStatus = "File Not Found";
-                    
-    //             }
-    //             log.SetAttribute("deletion.status", deletionStatus);
-
-    //             var blobStorage = new BlobStorageWrapper(_configuration);
-    //             await blobStorage.DeleteBlob(m.userid, m.filename);
-
-    //             HttpResponse response = context.Response;
-    //             response.StatusCode = 200;
-    //             response.ContentLength = Encoding.UTF8.GetByteCount(deletionStatus + ": " + m.filename);
-    //             response.ContentType = "text/plain; charset=utf-8";
-
-    //             await using (var bodyWriter = new StreamWriter(response.Body, leaveOpen: true))
-    //             {
-    //                 await bodyWriter.WriteAsync(deletionStatus + ": " + m.filename);
-    //                 await bodyWriter.FlushAsync();
-    //             }
-    //         }
-    //         catch(Exception e)
-    //         {
-    //             log.HandleException(e);
-    //         }
-    //     }
-    // }
+                foreach (var metadata in metadatas)
+                {
+                    m.lastTimestamp = DateTime.MinValue.ToString("o");
+                    await _cosmosDbWrapper.UpdateItemAsync(metadata.id, metadata.userid, metadata);   
+                }
+                
+                // The POST has no response body, so we just return and the system
+                // will return a 200 OK to the caller.
+            }
+            catch (UserErrorException e)
+            {
+                log.LogUserError(e.Message);
+            }
+            catch(Exception e)
+            {
+                log.HandleException(e);
+            }
+        }
+    }
 }
