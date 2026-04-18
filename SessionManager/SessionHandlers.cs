@@ -310,9 +310,9 @@ public class Sessions
 
                 await response.WriteAsync(promptContent);
 
-                log.SetAttribute("response.contenttype", response.ContentType);
+                //log.SetAttribute("response.contenttype", response.ContentType);
                 //log.SetAttribute("response.contentlength", response.ContentLength);
-                log.SetAttribute("response.content", response.Body);
+                //log.SetAttribute("response.content", response.Body);
             }
             catch (UserErrorException e)
             {
