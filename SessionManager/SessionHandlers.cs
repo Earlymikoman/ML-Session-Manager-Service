@@ -398,7 +398,7 @@ public class Sessions
 
                 foreach (var metadata in metadatas)
                 {
-                    m.lastTimestamp = DateTime.MinValue.ToString("o");
+                    metadata.lastTimestamp = DateTime.MinValue.ToString("o");
                     await _cosmosDbWrapper.UpdateItemAsync(metadata.id, metadata.userid, metadata);   
                 }
                 
