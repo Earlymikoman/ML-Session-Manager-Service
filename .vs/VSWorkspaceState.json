@@ -1,8 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\FileServer"
+    "\\.github",
+    "\\.github\\workflows",
+    "\\Azure",
+    "\\FileServer",
+    "\\obj",
+    "\\obj\\Debug",
+    "\\obj\\Debug\\net8.0",
+    "\\obj\\Debug\\net8.0\\refint",
+    "\\obj\\Debug\\net8.0\\staticwebassets",
+    "\\Utils"
   ],
-  "SelectedNode": "\\FileServer\\Sessions.cs",
   "PreviewInSolutionExplorer": false
 }
