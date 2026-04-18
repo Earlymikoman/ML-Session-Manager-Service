@@ -403,8 +403,8 @@ public class Sessions
                     await _cosmosDbWrapper.UpdateItemAsync(metadata.id, metadata.userid, metadata);   
                 }
                 
-                // The POST has no response body, so we just return and the system
-                // will return a 200 OK to the caller.
+                context.Response.StatusCode = 200;
+                context.Response.ContentLength = 0;
             }
             catch (UserErrorException e)
             {
