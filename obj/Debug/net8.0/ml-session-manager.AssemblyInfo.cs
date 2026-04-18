@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ml-session-manager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ea3dd028f8033b5299f7361510df50c0fcb1bc4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7dfdc87c87769860ca4bab88246647949a26b9e8")]
 [assembly: System.Reflection.AssemblyProductAttribute("ml-session-manager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ml-session-manager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

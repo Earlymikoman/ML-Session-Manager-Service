@@ -394,6 +394,7 @@ public class Sessions
                 {
                     throw new UserErrorException();
                 }
+                log.SetAttribute("request.useraccountsfound", metadatas.Count());
 
                 foreach (var metadata in metadatas)
                 {
